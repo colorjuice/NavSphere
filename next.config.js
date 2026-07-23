@@ -2,7 +2,7 @@
 const nextConfig = {
   // Standalone build for Cloudflare Pages
   // Note: Most routes use 'edge' runtime which is compatible with Cloudflare
-  output: 'standalone',
+  
 
   // Don't fail build on ESLint warnings
   eslint: {
