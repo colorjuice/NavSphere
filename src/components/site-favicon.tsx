@@ -10,11 +10,9 @@ interface SiteFaviconProps {
   className?: string
 }
 
-// useDefaultIcon === true、无 icon、或图片加载失败 → 显示首字母色块;否则显示 <img>。
 export function SiteFavicon({ title, icon, useDefaultIcon, className }: SiteFaviconProps) {
   const [errored, setErrored] = useState(false)
 
-  // icon 变化时重置错误态(同一组件实例复用于不同 item 时)
   useEffect(() => {
     setErrored(false)
   }, [icon])
@@ -23,9 +21,14 @@ export function SiteFavicon({ title, icon, useDefaultIcon, className }: SiteFavi
     return <LetterAvatar title={title} className={className} />
   }
 
+  // 核心：自动把系统生成的 /assets/ 相对路径实时转换为免配置的 jsDelivr CDN 链接
+  const displayIcon = icon.startsWith('/assets/')
+    ? `https://cdn.jsdelivr.net/gh/colorjuice/navsphere-data@main/public${icon}`
+    : icon
+
   return (
     <img
-      src={icon}
+      src={displayIcon}
       alt={`${title} icon`}
       className={className}
       onError={() => setErrored(true)}
