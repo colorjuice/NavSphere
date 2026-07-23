@@ -1,37 +1,18 @@
 import { NavigationContent } from '@/components/navigation-content'
-import { Metadata } from 'next/types'
-import { ScrollToTop } from '@/components/ScrollToTop'
-import { Container } from '@/components/ui/container'
+import { getFileContent } from '@/lib/github'
+import type { NavigationData } from '@/types/navigation'
 import type { SiteConfig } from '@/types/site'
-import navigationData from '@/navsphere/content/navigation.json'
-import siteDataRaw from '@/navsphere/content/site.json'
 
-import { getProcessedData } from '@/lib/data-loader'
+export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
-function getData() {
-  return getProcessedData(navigationData, siteDataRaw)
-}
-
-export function generateMetadata(): Metadata {
-  const { siteData } = getData()
-
-  return {
-    title: siteData.basic.title,
-    description: siteData.basic.description,
-    keywords: siteData.basic.keywords,
-    icons: {
-      icon: siteData.appearance.favicon,
-    },
-  }
-}
-
-export default function HomePage() {
-  const { navigationData, siteData } = getData()
+export default async function Home() {
+  const navigationData = (await getFileContent('src/navsphere/content/navigation.json')) as NavigationData
+  const siteData = (await getFileContent('src/navsphere/content/site.json')) as SiteConfig
 
   return (
-    <Container>
+    <main>
       <NavigationContent navigationData={navigationData} siteData={siteData} />
-      <ScrollToTop />
-    </Container>
+    </main>
   )
 }
