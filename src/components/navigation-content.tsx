@@ -8,11 +8,10 @@ import { Sidebar } from '@/components/sidebar'
 import { SearchBar } from '@/components/search-bar'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Footer } from '@/components/footer'
-import { Github, HelpCircle, Puzzle, MonitorPlay, Send } from 'lucide-react'
+import { HelpCircle, Menu } from 'lucide-react'
 import { Button } from "@/registry/new-york/ui/button"
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { Menu } from 'lucide-react'
 
 interface NavigationContentProps {
   navigationData: NavigationData
@@ -143,59 +142,10 @@ export function NavigationContent({ navigationData, siteData }: NavigationConten
               />
             </div>
             <div className="flex items-center gap-1">
-              <Link
-                href="/submit"
-                aria-label="投稿网站"
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link
-                href="/videos"
-                aria-label="Video Navigation"
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-accent hover:text-accent-foreground"
-                >
-                  <MonitorPlay className="h-5 w-5" />
-                </Button>
-              </Link>
+              {/* 白天/暗夜模式切换按钮 */}
               <ModeToggle />
-              <Link
-                href="https://github.com/tianyaxiang/NavSphere"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="访问 GitHub 仓库"
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Github className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link
-                href="https://github.com/tianyaxiang/navsphere-extension"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="下载浏览器插件"
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Puzzle className="h-5 w-5" />
-                </Button>
-              </Link>
+              
+              {/* 问号帮助按钮 */}
               <Link
                 href="https://mp.weixin.qq.com/s/XBeedyqHGJtaAa_v9EXz4A"
                 target="_blank"
@@ -210,6 +160,8 @@ export function NavigationContent({ navigationData, siteData }: NavigationConten
                   <HelpCircle className="h-5 w-5" />
                 </Button>
               </Link>
+
+              {/* 移动端菜单按钮 */}
               <Button
                 variant="ghost"
                 size="icon"
