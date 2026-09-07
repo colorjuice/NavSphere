@@ -6,39 +6,60 @@ export async function getFileContent(path: string) {
   const repo = process.env.GITHUB_REPO!
   const branch = process.env.GITHUB_BRANCH || 'main'
 
+  const defaultSite = {
+    basic: { title: '自用导航', description: '', keywords: '' },
+    appearance: { logo: '', favicon: '', theme: 'system' },
+    navigation: { linkTarget: '_blank' }
+  }
+
   try {
     const session = await auth()
     const token = session?.user?.accessToken
 
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
-    const response = await fetch(apiUrl, {
-      headers: {
-        Accept: 'application/vnd.github.v3.raw',
-        Authorization: token ? `token ${token}` : '',
-        'User-Agent': 'NavSphere',
-      },
+    let response: Response
+
+    if (token) {
+      // 登录状态使用 GitHub API
+      response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+        headers: {
+          Accept: 'application/vnd.github.v3.raw',
+          Authorization: `token ${token}`,
+          'User-Agent': 'NavSphere',
+        },
+        cache: 'no-store'
+      })
+    } else {
+      // 未登录访客直接使用 raw 链接读取，永久稳定且没有每小时 60 次的限制
+      response = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`, {
+        headers: {
+          'User-Agent': 'NavSphere',
+        },
+        cache: 'no-store'
+      })
+    }
+
+    if (response.ok) {
+      return await response.json()
+    }
+
+    // 备用 CDN 降级读取
+    const cdnResponse = await fetch(`https://cdn.jsdelivr.net/gh/${owner}/${repo}@${branch}/${path}`, {
+      cache: 'no-store'
     })
-
-    if (response.status === 404) {
-      console.log(`File not found: ${path}, returning default data`)
-      if (path.includes('navigation.json')) {
-        return { navigationItems: [] }
-      }
-      return {}
+    if (cdnResponse.ok) {
+      return await cdnResponse.json()
     }
 
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`)
+    if (path.includes('navigation.json')) {
+      return { navigationItems: [] }
     }
-
-    const data = await response.json()
-    return data
+    return defaultSite
   } catch (error) {
     console.error('Error fetching file:', error)
     if (path.includes('navigation.json')) {
       return { navigationItems: [] }
     }
-    return {}
+    return defaultSite
   }
 }
 
@@ -57,7 +78,7 @@ export async function commitFile(
 
   for (let attempt = 1; attempt <= retryCount; attempt++) {
     try {
-      // 1. 获取当前文件信息（如果存在）
+      // 1. 获取当前文件信息
       const currentFileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
       const currentFileResponse = await fetch(currentFileUrl, {
         headers: {
@@ -65,7 +86,7 @@ export async function commitFile(
           Accept: 'application/vnd.github.v3+json',
           'User-Agent': 'NavSphere',
         },
-        cache: 'no-store', // 禁用缓存，确保获取最新的文件信息
+        cache: 'no-store',
       })
 
       let sha = undefined
@@ -95,8 +116,7 @@ export async function commitFile(
       if (!response.ok) {
         const error = await response.json()
         if (attempt < retryCount && error.message?.includes('sha')) {
-          console.log(`Attempt ${attempt} failed, retrying after delay...`)
-          await delay(1000 * attempt) // 指数退避
+          await delay(1000 * attempt)
           continue
         }
         throw new Error(`Failed to commit file: ${error.message}`)
@@ -108,8 +128,7 @@ export async function commitFile(
         console.error('Error in commitFile:', error)
         throw error
       }
-      console.log(`Attempt ${attempt} failed, retrying...`)
       await delay(1000 * attempt)
     }
   }
-} 
+}
